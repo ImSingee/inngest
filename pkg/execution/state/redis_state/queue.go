@@ -1762,11 +1762,17 @@ type peekOpts struct {
 	PartitionID  string
 	PartitionKey string
 	Random       bool
+	From         *time.Time
 	Until        time.Time
 	Limit        int64
 }
 
 func (q *queue) peek(ctx context.Context, shard QueueShard, opts peekOpts) ([]*osqueue.QueueItem, error) {
+	from := "-inf"
+	if opts.From != nil && opts.From.UnixMilli() > 0 {
+		from = strconv.Itoa(int(opts.From.UnixMilli()))
+	}
+
 	until := "+inf"
 	if opts.Until.UnixMilli() > 0 {
 		until = strconv.Itoa(int(opts.Until.UnixMilli()))
@@ -1782,6 +1788,7 @@ func (q *queue) peek(ctx context.Context, shard QueueShard, opts peekOpts) ([]*o
 		shard.RedisClient.kg.QueueItem(),
 	}
 	args, err := StrSlice([]any{
+		from,
 		until,
 		opts.Limit,
 		randomOffset,
