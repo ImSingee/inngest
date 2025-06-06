@@ -218,7 +218,7 @@ func (q *queue) ItemsByPartition(ctx context.Context, shard QueueShard, partitio
 
 	l := q.log.With(
 		"method", "ItemsByPartition",
-		"workflowID", partitionID.String(),
+		"partitionID", partitionID.String(),
 		"from", from,
 		"until", until,
 	)
@@ -294,8 +294,19 @@ func (q *queue) ItemsByPartition(ctx context.Context, shard QueueShard, partitio
 		}
 
 		if opt.allowKeyQueues() {
+			hash := shard.RedisClient.kg.ShadowPartitionMeta()
+			cmd := rc.B().Hget().Key(hash).Field(partitionID.String()).Build()
+			byt, err := rc.Do(ctx, cmd).AsBytes()
+			if err != nil {
+				l.Error("error retrieving shadow partition from queue", "error", err)
+				return
+			}
+
 			var spt QueueShadowPartition
-			// TODO: load shadow partition
+			if err := json.Unmarshal(byt, &spt); err != nil {
+				l.Error("error unmarshalling shadow partition", "error", err)
+				return
+			}
 
 			l = l.With("shadow_partition", spt)
 
