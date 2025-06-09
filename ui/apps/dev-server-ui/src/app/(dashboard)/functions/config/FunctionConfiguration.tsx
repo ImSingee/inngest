@@ -517,7 +517,7 @@ export default function FunctionConfiguration({
                       <td className="text-basis px-2 text-right text-sm">
                         {concurrencyConfig.limit.value}
                         {concurrencyConfig.limit.isPlanLimit && (
-                          <Pill className="ml-2">Plan Limit</Pill>
+                          <Pill className="ml-2">Plan limit</Pill>
                         )}
                       </td>
                     </tr>
